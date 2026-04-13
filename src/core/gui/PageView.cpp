@@ -1,3 +1,4 @@
+#include "control/zoom/ZoomControl.h"
 #include "PageView.h"
 
 #include <algorithm>  // for max, find_if
@@ -1052,11 +1053,20 @@ auto XojPageView::paintPage(cairo_t* cr, GdkRectangle* rect) -> bool {
             return true;
         }
 
+
+
         if (this->buffer.getZoom() != zoom) {
-            rerenderPage();
+            if (!this->getXournal()->getControl()->getZoomControl()->isZoomSequenceActive()) {
+                rerenderPage();
+            }
+        }
+
+        this->buffer.paintTo(cr);
+
+        if (this->buffer.getZoom() != zoom) {
             cairo_pattern_set_filter(cairo_get_source(cr), CAIRO_FILTER_FAST);
         }
-        this->buffer.paintTo(cr);
+
     }  // Restore the state of cr and then release the mutex
        // restoring the state of cr ensures this->buffer.surface is not longer referenced as the source in cr.
 

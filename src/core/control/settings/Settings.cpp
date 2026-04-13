@@ -258,6 +258,7 @@ void Settings::loadDefault() {
     this->stabilizerDrag = 0.4;
     this->stabilizerMass = 5.0;
     this->stabilizerFinalizeStroke = true;
+    this->stabilizerPrediction = false;
     /**/
 
     this->useSpacesForTab = false;
@@ -732,6 +733,8 @@ void Settings::parseItem(xmlDocPtr doc, xmlNodePtr cur) {
         this->stabilizerCuspDetection = xmlStrcmp(value, reinterpret_cast<const xmlChar*>("true")) == 0;
     } else if (xmlStrcmp(name, reinterpret_cast<const xmlChar*>("stabilizerFinalizeStroke")) == 0) {
         this->stabilizerFinalizeStroke = xmlStrcmp(value, reinterpret_cast<const xmlChar*>("true")) == 0;
+    } else if (xmlStrcmp(name, reinterpret_cast<const xmlChar*>("stabilizerPrediction")) == 0) {
+        this->stabilizerPrediction = xmlStrcmp(value, reinterpret_cast<const xmlChar*>("true")) == 0;
     } else if (xmlStrcmp(name, reinterpret_cast<const xmlChar*>("colorPalette")) == 0) {
         std::string_view paletteConfig = std::string_view{reinterpret_cast<const char*>(value)};
         if (!paletteConfig.empty()) {
@@ -1199,6 +1202,7 @@ void Settings::save() {
     saveProperty("stabilizerAveragingMethod", static_cast<int>(stabilizerAveragingMethod), root);
     saveProperty("stabilizerPreprocessor", static_cast<int>(stabilizerPreprocessor), root);
     SAVE_UINT_PROP(stabilizerBuffersize);
+    SAVE_BOOL_PROP(stabilizerPrediction);
     SAVE_DOUBLE_PROP(stabilizerSigma);
     SAVE_DOUBLE_PROP(stabilizerDeadzoneRadius);
     SAVE_DOUBLE_PROP(stabilizerDrag);
@@ -2606,6 +2610,9 @@ auto Settings::getStabilizerAveragingMethod() const -> StrokeStabilizer::Averagi
 }
 auto Settings::getStabilizerPreprocessor() const -> StrokeStabilizer::Preprocessor { return stabilizerPreprocessor; }
 
+auto Settings::getStabilizerPrediction() const -> bool { return stabilizerPrediction; }
+
+
 void Settings::setStabilizerCuspDetection(bool cuspDetection) {
     if (stabilizerCuspDetection == cuspDetection) {
         return;
@@ -2665,6 +2672,13 @@ void Settings::setStabilizerAveragingMethod(StrokeStabilizer::AveragingMethod av
     stabilizerAveragingMethod = method;
     save();
 }
+void Settings::setStabilizerPrediction(bool prediction) {
+    if (this->stabilizerPrediction != prediction) {
+        this->stabilizerPrediction = prediction;
+        save();
+    }
+}
+
 void Settings::setStabilizerPreprocessor(StrokeStabilizer::Preprocessor preprocessor) {
     const StrokeStabilizer::Preprocessor p =
             StrokeStabilizer::isValid(preprocessor) ? preprocessor : StrokeStabilizer::Preprocessor::NONE;

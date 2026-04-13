@@ -550,6 +550,31 @@ private:
     inline Event getLastEvent() override { return Deadzone::getLastEvent(); }
 };
 
+
+class PredictionStabilizer: virtual public Active {
+public:
+    PredictionStabilizer(bool finalize): Active(finalize), velocity({0,0}), lastTimestamp(0) {}
+    ~PredictionStabilizer() override = default;
+
+    [[maybe_unused]] auto getInfo() -> std::string override {
+        return "OneNote-Style Prediction Stabilizer";
+    }
+
+protected:
+    void recordFirstEvent(const PositionInputData& pos) override;
+    void processEvent(const PositionInputData& pos) override;
+
+    inline void setLastPaintedEvent(const Event& ev) override { lastEvent = ev; }
+    inline Event getLastEvent() override { return lastEvent; }
+
+private:
+    Event lastEvent;
+    guint32 lastTimestamp;
+    MathVect2 velocity;
+
+    void rebalanceStrokePressures() override;
+};
+
 class VelocityGaussianInertia: public VelocityGaussian, public Inertia {
 public:
     VelocityGaussianInertia(bool finalize, double sigma, double drag, double mass):

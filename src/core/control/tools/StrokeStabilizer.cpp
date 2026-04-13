@@ -1,3 +1,4 @@
+#include "view/overlays/StrokeToolView.h"
 #include "StrokeStabilizer.h"
 
 #include <algorithm>  // for min
@@ -18,7 +19,12 @@
  */
 auto StrokeStabilizer::get(Settings* settings) -> std::unique_ptr<StrokeStabilizer::Base> {
 
+    if (settings->getStabilizerPrediction()) {
+        return std::make_unique<StrokeStabilizer::PredictionStabilizer>(settings->getStabilizerFinalizeStroke());
+    }
+
     AveragingMethod averagingMethod = settings->getStabilizerAveragingMethod();
+
     Preprocessor preprocessor = settings->getStabilizerPreprocessor();
 
     if (averagingMethod == AveragingMethod::ARITHMETIC) {
@@ -402,4 +408,60 @@ void StrokeStabilizer::VelocityGaussian::resetBuffer(Event& ev, guint32 timestam
         lastEventTimestamp = timestamp;
         eventBuffer.emplace_front(ev);
     }
+}
+
+/**
+ * StrokeStabilizer::PredictionStabilizer
+ */
+void StrokeStabilizer::PredictionStabilizer::recordFirstEvent(const PositionInputData& pos) {
+    lastEvent = Event(pos);
+    lastTimestamp = pos.timestamp;
+    velocity = {0, 0};
+}
+
+
+void StrokeStabilizer::PredictionStabilizer::processEvent(const PositionInputData& pos) {
+    // Current event
+    Event currentEvent(pos);
+    guint32 currentTimestamp = pos.timestamp;
+
+    // Time difference
+    double dt = static_cast<double>(currentTimestamp - lastTimestamp);
+    if (dt <= 0) dt = 1.0;
+
+    // Calculate instantaneous velocity
+    MathVect2 currentVelocity = {
+        (currentEvent.x - lastEvent.x) / dt,
+        (currentEvent.y - lastEvent.y) / dt
+    };
+
+    // Smooth velocity
+    double alpha = 0.5; // Smoothing factor
+    velocity.dx = alpha * currentVelocity.dx + (1 - alpha) * velocity.dx;
+    velocity.dy = alpha * currentVelocity.dy + (1 - alpha) * velocity.dy;
+
+    // Draw the actual event
+    drawEvent(currentEvent);
+
+    // Predict future point (e.g. 15ms into the future)
+    double predictionTime = 15.0;
+    Event predictedEvent(
+        currentEvent.x + velocity.dx * predictionTime,
+        currentEvent.y + velocity.dy * predictionTime,
+        currentEvent.pressure
+    );
+
+    // Update the temporary predictive tail using strokeHandler
+    if (strokeHandler) {
+        if (auto vp = strokeHandler->getViewPool()) {
+            vp->dispatch(xoj::view::StrokeToolView::PREDICTION_REQUEST, Point(predictedEvent.x, predictedEvent.y, predictedEvent.pressure));
+        }
+    }
+
+    lastEvent = currentEvent;
+    lastTimestamp = currentTimestamp;
+}
+
+
+void StrokeStabilizer::PredictionStabilizer::rebalanceStrokePressures() {
 }

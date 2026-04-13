@@ -1,3 +1,4 @@
+#include "model/Point.h"
 /*
  * Xournal++
  *
@@ -20,7 +21,6 @@
 #include "BaseStrokeToolView.h"
 
 class StrokeHandler;
-class Point;
 class Range;
 class Stroke;
 class OverlayBase;
@@ -63,6 +63,14 @@ public:
     } FINALIZATION_REQUEST = {};
     void deleteOn(FinalizationRequest, const Range& rg);
 
+    static constexpr struct PredictionRequest {
+    } PREDICTION_REQUEST = {};
+    virtual void on(PredictionRequest, const Point& p);
+
+    static constexpr struct ClearPredictionRequest {
+    } CLEAR_PREDICTION_REQUEST = {};
+    virtual void on(ClearPredictionRequest);
+
 protected:
     /**
      * @brief Compute the bounding box of the given segment, taking stroke width into account.
@@ -104,5 +112,8 @@ protected:
      * Upon calls to draw(), the buffer is flushed and the corresponding part of stroke is added to the mask.
      */
     mutable Mask mask;
+
+    bool hasPrediction = false;
+    Point predictedPoint;
 };
 };  // namespace xoj::view

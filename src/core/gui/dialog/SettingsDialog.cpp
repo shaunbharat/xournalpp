@@ -379,6 +379,7 @@ void SettingsDialog::load() {
      */
     loadCheckbox("cbStabilizerEnableCuspDetection", settings->getStabilizerCuspDetection());
     loadCheckbox("cbStabilizerEnableFinalizeStroke", settings->getStabilizerFinalizeStroke());
+    loadCheckbox("cbStabilizerPrediction", settings->getStabilizerPrediction());
 
     GtkWidget* sbStabilizerBuffersize = builder.get("sbStabilizerBuffersize");
     gtk_spin_button_set_value(GTK_SPIN_BUTTON(sbStabilizerBuffersize),
@@ -790,6 +791,7 @@ void SettingsDialog::save() {
     settings->setStabilizerSigma(gtk_spin_button_get_value(GTK_SPIN_BUTTON(builder.get("sbStabilizerSigma"))));
     settings->setStabilizerCuspDetection(getCheckbox("cbStabilizerEnableCuspDetection"));
     settings->setStabilizerFinalizeStroke(getCheckbox("cbStabilizerEnableFinalizeStroke"));
+    settings->setStabilizerPrediction(getCheckbox("cbStabilizerPrediction"));
 
     settings->setSidebarNumberingStyle(static_cast<SidebarNumberingStyle>(
             gtk_combo_box_get_active(GTK_COMBO_BOX(builder.get("cbSidebarPageNumberStyle")))));

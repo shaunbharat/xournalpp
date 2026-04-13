@@ -1,3 +1,4 @@
+#include "model/Point.h"
 #include "StrokeToolView.h"
 
 #include <functional>
@@ -144,4 +145,33 @@ std::vector<Point> StrokeToolView::flushBuffer() const {
         this->pointBuffer.emplace_back(pts.back());
     }
     return pts;
+}
+
+
+void StrokeToolView::on(StrokeToolView::PredictionRequest, const Point& p) {
+    this->hasPrediction = true;
+    this->predictedPoint = p;
+    // We request a repaint of the union of old tail and new tail
+    // A simple repaint of a wide bounding box around the predicted point is enough
+    Range r(p.x - strokeWidth, p.y - strokeWidth);
+    r.addPoint(p.x + strokeWidth, p.y + strokeWidth);
+    if (!this->pointBuffer.empty()) {
+        Point lastPoint = this->pointBuffer.back();
+        r.addPoint(lastPoint.x - strokeWidth, lastPoint.y - strokeWidth);
+        r.addPoint(lastPoint.x + strokeWidth, lastPoint.y + strokeWidth);
+    }
+
+    // Instead of repaint() (which doesn't exist), we can request parent redraw via fireRepaint() or similar if available
+    // For xournalpp Repaintable:
+    this->parent->flagDirtyRegion(r);
+}
+
+void StrokeToolView::on(StrokeToolView::ClearPredictionRequest) {
+    if (this->hasPrediction) {
+        this->hasPrediction = false;
+        Point p = this->predictedPoint;
+        Range r(p.x - strokeWidth, p.y - strokeWidth);
+        r.addPoint(p.x + strokeWidth, p.y + strokeWidth);
+        this->parent->flagDirtyRegion(r);
+    }
 }

@@ -571,6 +571,8 @@ public:
     double getStabilizerSigma() const;
     StrokeStabilizer::AveragingMethod getStabilizerAveragingMethod() const;
     StrokeStabilizer::Preprocessor getStabilizerPreprocessor() const;
+    bool getStabilizerPrediction() const;
+
 
     void setStabilizerCuspDetection(bool cuspDetection);
     void setStabilizerFinalizeStroke(bool finalizeStroke);
@@ -581,6 +583,8 @@ public:
     void setStabilizerSigma(double sigma);
     void setStabilizerAveragingMethod(StrokeStabilizer::AveragingMethod averagingMethod);
     void setStabilizerPreprocessor(StrokeStabilizer::Preprocessor preprocessor);
+    void setStabilizerPrediction(bool prediction);
+
 
     fs::path const& getColorPaletteSetting();
     void setColorPaletteSetting(fs::path palettePath);
@@ -1181,6 +1185,8 @@ private:
     double stabilizerSigma{};
     StrokeStabilizer::AveragingMethod stabilizerAveragingMethod{};
     StrokeStabilizer::Preprocessor stabilizerPreprocessor{};
+    bool stabilizerPrediction{};
+;
 
     fs::path colorPaletteSetting;
 
