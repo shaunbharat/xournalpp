@@ -44,7 +44,6 @@
 #include "control/tools/StrokeHandler.h"            // for StrokeHandler
 #include "control/tools/TextEditor.h"               // for TextEditor, TextE...
 #include "control/tools/VerticalToolHandler.h"      // for VerticalToolHandler
-#include "control/zoom/ZoomControl.h"
 #include "gui/FloatingToolbox.h"                    // for FloatingToolbox
 #include "gui/MainWindow.h"                         // for MainWindow
 #include "gui/PdfFloatingToolbox.h"                 // for PdfFloatingToolbox
@@ -1053,19 +1052,11 @@ auto XojPageView::paintPage(cairo_t* cr, GdkRectangle* rect) -> bool {
             return true;
         }
 
-
         if (this->buffer.getZoom() != zoom) {
-            if (!this->getXournal()->getControl()->getZoomControl()->isZoomSequenceActive()) {
-                rerenderPage();
-            }
-        }
-
-        this->buffer.paintTo(cr);
-
-        if (this->buffer.getZoom() != zoom) {
+            rerenderPage();
             cairo_pattern_set_filter(cairo_get_source(cr), CAIRO_FILTER_FAST);
         }
-
+        this->buffer.paintTo(cr);
     }  // Restore the state of cr and then release the mutex
        // restoring the state of cr ensures this->buffer.surface is not longer referenced as the source in cr.
 

@@ -6,7 +6,6 @@
 
 #include "control/tools/StrokeHandler.h"
 #include "model/LineStyle.h"
-#include "model/Point.h"
 #include "model/Stroke.h"
 #include "util/Assert.h"
 #include "util/Color.h"
@@ -32,25 +31,7 @@ void StrokeToolView::draw(cairo_t* cr) const {
 
     std::vector<Point> pts = this->flushBuffer();
     if (pts.empty()) {
-        // We might not have new points, but we still need to draw the mask and any active predictive tail
-        if (mask.isInitialized()) {
-            mask.paintTo(cr);
-            if (this->hasPrediction) {
-                cairo_save(cr);
-                Point lastPoint = this->pointBuffer.empty() ? Point(0, 0, 0) : this->pointBuffer.back();
-
-                cairo_set_source_rgba(cr, strokeColor.red / 255.0, strokeColor.green / 255.0, strokeColor.blue / 255.0,
-                                      strokeColor.alpha / 255.0 * 0.5);  // semi-transparent
-                cairo_set_line_width(cr, this->predictedPoint.z > 0 ? this->predictedPoint.z : strokeWidth);
-                cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
-                cairo_set_line_join(cr, CAIRO_LINE_JOIN_ROUND);
-
-                cairo_move_to(cr, lastPoint.x, lastPoint.y);
-                cairo_line_to(cr, this->predictedPoint.x, this->predictedPoint.y);
-                cairo_stroke(cr);
-                cairo_restore(cr);
-            }
-        }
+        // The input sequence has probably been cancelled. This view should soon be deleted
         return;
     }
     // pts.front() is the last point we painted on the mask during the last iteration (see flushBuffer())
@@ -163,33 +144,4 @@ std::vector<Point> StrokeToolView::flushBuffer() const {
         this->pointBuffer.emplace_back(pts.back());
     }
     return pts;
-}
-
-
-void StrokeToolView::on(StrokeToolView::PredictionRequest, const Point& p) {
-    this->hasPrediction = true;
-    this->predictedPoint = p;
-    // We request a repaint of the union of old tail and new tail
-    // A simple repaint of a wide bounding box around the predicted point is enough
-    Range r(p.x - strokeWidth, p.y - strokeWidth);
-    r.addPoint(p.x + strokeWidth, p.y + strokeWidth);
-    if (!this->pointBuffer.empty()) {
-        Point lastPoint = this->pointBuffer.back();
-        r.addPoint(lastPoint.x - strokeWidth, lastPoint.y - strokeWidth);
-        r.addPoint(lastPoint.x + strokeWidth, lastPoint.y + strokeWidth);
-    }
-
-    // Instead of repaint() (which doesn't exist), we can request parent redraw via fireRepaint() or similar if
-    // available For xournalpp Repaintable:
-    this->parent->flagDirtyRegion(r);
-}
-
-void StrokeToolView::on(StrokeToolView::ClearPredictionRequest) {
-    if (this->hasPrediction) {
-        this->hasPrediction = false;
-        Point p = this->predictedPoint;
-        Range r(p.x - strokeWidth, p.y - strokeWidth);
-        r.addPoint(p.x + strokeWidth, p.y + strokeWidth);
-        this->parent->flagDirtyRegion(r);
-    }
 }

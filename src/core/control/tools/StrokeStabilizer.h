@@ -417,6 +417,28 @@ private:
     guint32 lastEventTimestamp;
 };
 
+
+class PredictionStabilizer: virtual public Active {
+public:
+    PredictionStabilizer(bool finalize): Active(finalize), velocity({0, 0}), lastTimestamp(0) {}
+    ~PredictionStabilizer() override = default;
+
+    [[maybe_unused]] auto getInfo() -> std::string override {
+        return "Kinematic Prediction Stabilizer (OneNote style)";
+    }
+
+protected:
+    void recordFirstEvent(const PositionInputData& pos) override;
+    void averageAndPaint(const Event& ev, guint32 timestamp) override;
+    void resetBuffer(Event& ev, guint32 timestamp) override;
+    Event getLastEvent() override;
+
+private:
+    MathVect2 velocity;
+    guint32 lastTimestamp;
+    Event lastEvent;
+};
+
 class Arithmetic: virtual public Active {
 public:
     Arithmetic(bool finalize, size_t buffersize): Active(finalize), bufferLength(buffersize), eventBuffer(buffersize) {}
@@ -548,29 +570,6 @@ private:
      * @return The last event received
      */
     inline Event getLastEvent() override { return Deadzone::getLastEvent(); }
-};
-
-
-class PredictionStabilizer: virtual public Active {
-public:
-    PredictionStabilizer(bool finalize): Active(finalize), velocity({0, 0}), lastTimestamp(0) {}
-    ~PredictionStabilizer() override = default;
-
-    [[maybe_unused]] auto getInfo() -> std::string override { return "OneNote-Style Prediction Stabilizer"; }
-
-protected:
-    void recordFirstEvent(const PositionInputData& pos) override;
-    void processEvent(const PositionInputData& pos) override;
-
-    inline void setLastPaintedEvent(const Event& ev) override { lastEvent = ev; }
-    inline Event getLastEvent() override { return lastEvent; }
-
-private:
-    Event lastEvent;
-    guint32 lastTimestamp;
-    MathVect2 velocity;
-
-    void rebalanceStrokePressures() override;
 };
 
 class VelocityGaussianInertia: public VelocityGaussian, public Inertia {
