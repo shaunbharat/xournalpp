@@ -1,4 +1,3 @@
-#include "model/Point.h"
 #include "StrokeToolView.h"
 
 #include <functional>
@@ -7,6 +6,7 @@
 
 #include "control/tools/StrokeHandler.h"
 #include "model/LineStyle.h"
+#include "model/Point.h"
 #include "model/Stroke.h"
 #include "util/Assert.h"
 #include "util/Color.h"
@@ -37,9 +37,10 @@ void StrokeToolView::draw(cairo_t* cr) const {
             mask.paintTo(cr);
             if (this->hasPrediction) {
                 cairo_save(cr);
-                Point lastPoint = this->pointBuffer.empty() ? Point(0,0,0) : this->pointBuffer.back();
+                Point lastPoint = this->pointBuffer.empty() ? Point(0, 0, 0) : this->pointBuffer.back();
 
-                cairo_set_source_rgba(cr, strokeColor.red / 255.0, strokeColor.green / 255.0, strokeColor.blue / 255.0, strokeColor.alpha / 255.0 * 0.5); // semi-transparent
+                cairo_set_source_rgba(cr, strokeColor.red / 255.0, strokeColor.green / 255.0, strokeColor.blue / 255.0,
+                                      strokeColor.alpha / 255.0 * 0.5);  // semi-transparent
                 cairo_set_line_width(cr, this->predictedPoint.z > 0 ? this->predictedPoint.z : strokeWidth);
                 cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
                 cairo_set_line_join(cr, CAIRO_LINE_JOIN_ROUND);
@@ -178,8 +179,8 @@ void StrokeToolView::on(StrokeToolView::PredictionRequest, const Point& p) {
         r.addPoint(lastPoint.x + strokeWidth, lastPoint.y + strokeWidth);
     }
 
-    // Instead of repaint() (which doesn't exist), we can request parent redraw via fireRepaint() or similar if available
-    // For xournalpp Repaintable:
+    // Instead of repaint() (which doesn't exist), we can request parent redraw via fireRepaint() or similar if
+    // available For xournalpp Repaintable:
     this->parent->flagDirtyRegion(r);
 }
 

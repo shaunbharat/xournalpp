@@ -84,7 +84,7 @@ protected:
      *
      * Does nothing in the base class
      */
-    virtual inline void recordFirstEvent(const PositionInputData& pos){};
+    virtual inline void recordFirstEvent(const PositionInputData& pos) {};
 
     /**
      * @brief Pointer to the StrokeHandler instance handling the stroke
@@ -553,12 +553,10 @@ private:
 
 class PredictionStabilizer: virtual public Active {
 public:
-    PredictionStabilizer(bool finalize): Active(finalize), velocity({0,0}), lastTimestamp(0) {}
+    PredictionStabilizer(bool finalize): Active(finalize), velocity({0, 0}), lastTimestamp(0) {}
     ~PredictionStabilizer() override = default;
 
-    [[maybe_unused]] auto getInfo() -> std::string override {
-        return "OneNote-Style Prediction Stabilizer";
-    }
+    [[maybe_unused]] auto getInfo() -> std::string override { return "OneNote-Style Prediction Stabilizer"; }
 
 protected:
     void recordFirstEvent(const PositionInputData& pos) override;

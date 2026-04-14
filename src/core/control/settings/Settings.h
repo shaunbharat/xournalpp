@@ -1186,7 +1186,7 @@ private:
     StrokeStabilizer::AveragingMethod stabilizerAveragingMethod{};
     StrokeStabilizer::Preprocessor stabilizerPreprocessor{};
     bool stabilizerPrediction{};
-;
+    ;
 
     fs::path colorPaletteSetting;
 

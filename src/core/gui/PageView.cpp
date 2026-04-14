@@ -1,4 +1,3 @@
-#include "control/zoom/ZoomControl.h"
 #include "PageView.h"
 
 #include <algorithm>  // for max, find_if
@@ -45,6 +44,7 @@
 #include "control/tools/StrokeHandler.h"            // for StrokeHandler
 #include "control/tools/TextEditor.h"               // for TextEditor, TextE...
 #include "control/tools/VerticalToolHandler.h"      // for VerticalToolHandler
+#include "control/zoom/ZoomControl.h"
 #include "gui/FloatingToolbox.h"                    // for FloatingToolbox
 #include "gui/MainWindow.h"                         // for MainWindow
 #include "gui/PdfFloatingToolbox.h"                 // for PdfFloatingToolbox
@@ -1052,7 +1052,6 @@ auto XojPageView::paintPage(cairo_t* cr, GdkRectangle* rect) -> bool {
             drawLoadingPage(cr);
             return true;
         }
-
 
 
         if (this->buffer.getZoom() != zoom) {

@@ -1,4 +1,3 @@
-#include "view/overlays/StrokeToolView.h"
 #include "StrokeStabilizer.h"
 
 #include <algorithm>  // for min
@@ -13,6 +12,7 @@
 #include "control/tools/StrokeStabilizerEnum.h"  // for Preprocessor, Averag...
 #include "model/SplineSegment.h"                 // for SplineSegment
 #include "model/Stroke.h"                        // for Stroke
+#include "view/overlays/StrokeToolView.h"
 
 /**
  * StrokeStabilizer::get
@@ -427,16 +427,14 @@ void StrokeStabilizer::PredictionStabilizer::processEvent(const PositionInputDat
 
     // Time difference
     double dt = static_cast<double>(currentTimestamp - lastTimestamp);
-    if (dt <= 0) dt = 1.0;
+    if (dt <= 0)
+        dt = 1.0;
 
     // Calculate instantaneous velocity
-    MathVect2 currentVelocity = {
-        (currentEvent.x - lastEvent.x) / dt,
-        (currentEvent.y - lastEvent.y) / dt
-    };
+    MathVect2 currentVelocity = {(currentEvent.x - lastEvent.x) / dt, (currentEvent.y - lastEvent.y) / dt};
 
     // Smooth velocity
-    double alpha = 0.5; // Smoothing factor
+    double alpha = 0.5;  // Smoothing factor
     velocity.dx = alpha * currentVelocity.dx + (1 - alpha) * velocity.dx;
     velocity.dy = alpha * currentVelocity.dy + (1 - alpha) * velocity.dy;
 
@@ -445,16 +443,14 @@ void StrokeStabilizer::PredictionStabilizer::processEvent(const PositionInputDat
 
     // Predict future point (e.g. 15ms into the future)
     double predictionTime = 15.0;
-    Event predictedEvent(
-        currentEvent.x + velocity.dx * predictionTime,
-        currentEvent.y + velocity.dy * predictionTime,
-        currentEvent.pressure
-    );
+    Event predictedEvent(currentEvent.x + velocity.dx * predictionTime, currentEvent.y + velocity.dy * predictionTime,
+                         currentEvent.pressure);
 
     // Update the temporary predictive tail using strokeHandler
     if (strokeHandler) {
         if (auto vp = strokeHandler->getViewPool()) {
-            vp->dispatch(xoj::view::StrokeToolView::PREDICTION_REQUEST, Point(predictedEvent.x, predictedEvent.y, predictedEvent.pressure));
+            vp->dispatch(xoj::view::StrokeToolView::PREDICTION_REQUEST,
+                         Point(predictedEvent.x, predictedEvent.y, predictedEvent.pressure));
         }
     }
 
@@ -463,5 +459,4 @@ void StrokeStabilizer::PredictionStabilizer::processEvent(const PositionInputDat
 }
 
 
-void StrokeStabilizer::PredictionStabilizer::rebalanceStrokePressures() {
-}
+void StrokeStabilizer::PredictionStabilizer::rebalanceStrokePressures() {}
