@@ -32,7 +32,24 @@ void StrokeToolView::draw(cairo_t* cr) const {
 
     std::vector<Point> pts = this->flushBuffer();
     if (pts.empty()) {
-        // The input sequence has probably been cancelled. This view should soon be deleted
+        // We might not have new points, but we still need to draw the mask and any active predictive tail
+        if (mask.isInitialized()) {
+            mask.paintTo(cr);
+            if (this->hasPrediction) {
+                cairo_save(cr);
+                Point lastPoint = this->pointBuffer.empty() ? Point(0,0,0) : this->pointBuffer.back();
+
+                cairo_set_source_rgba(cr, strokeColor.red / 255.0, strokeColor.green / 255.0, strokeColor.blue / 255.0, strokeColor.alpha / 255.0 * 0.5); // semi-transparent
+                cairo_set_line_width(cr, this->predictedPoint.z > 0 ? this->predictedPoint.z : strokeWidth);
+                cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
+                cairo_set_line_join(cr, CAIRO_LINE_JOIN_ROUND);
+
+                cairo_move_to(cr, lastPoint.x, lastPoint.y);
+                cairo_line_to(cr, this->predictedPoint.x, this->predictedPoint.y);
+                cairo_stroke(cr);
+                cairo_restore(cr);
+            }
+        }
         return;
     }
     // pts.front() is the last point we painted on the mask during the last iteration (see flushBuffer())
