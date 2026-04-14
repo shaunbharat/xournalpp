@@ -13,7 +13,7 @@
 
 namespace StrokeStabilizer {
 
-enum class AveragingMethod { NONE, ARITHMETIC, VELOCITY_GAUSSIAN };
+enum class AveragingMethod { NONE, ARITHMETIC, VELOCITY_GAUSSIAN, PREDICTIVE };
 
 constexpr bool isValid(AveragingMethod am) {
     return am == AveragingMethod::NONE || am == AveragingMethod::ARITHMETIC || am == AveragingMethod::VELOCITY_GAUSSIAN;

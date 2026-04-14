@@ -18,8 +18,14 @@
  */
 auto StrokeStabilizer::get(Settings* settings) -> std::unique_ptr<StrokeStabilizer::Base> {
 
+
     AveragingMethod averagingMethod = settings->getStabilizerAveragingMethod();
     Preprocessor preprocessor = settings->getStabilizerPreprocessor();
+
+    if (averagingMethod == AveragingMethod::PREDICTIVE) {
+        return std::make_unique<StrokeStabilizer::PredictionStabilizer>(settings->getStabilizerFinalizeStroke());
+    }
+
 
     if (averagingMethod == AveragingMethod::ARITHMETIC) {
         if (preprocessor == Preprocessor::DEADZONE) {
@@ -163,6 +169,50 @@ void StrokeStabilizer::Active::quadraticSplineTo(const Event& ev) {
     strokeHandler->drawSegmentTo(C);
 }
 
+
+/**
+ * StrokeStabilizer::PredictionStabilizer
+ */
+void StrokeStabilizer::PredictionStabilizer::recordFirstEvent(const PositionInputData& pos) {
+    lastEvent = Event(pos);
+    lastTimestamp = pos.timestamp;
+    velocity = {0, 0};
+    drawEvent(lastEvent);
+}
+
+void StrokeStabilizer::PredictionStabilizer::averageAndPaint(const Event& ev, guint32 timestamp) {
+    if (timestamp > lastTimestamp) {
+        double dt = static_cast<double>(timestamp - lastTimestamp);
+        // Calculate instantaneous velocity
+        MathVect2 newVelocity = {(ev.x - lastEvent.x) / dt, (ev.y - lastEvent.y) / dt};
+        // Simple smoothing for velocity
+        velocity.dx = 0.7 * velocity.dx + 0.3 * newVelocity.dx;
+        velocity.dy = 0.7 * velocity.dy + 0.3 * newVelocity.dy;
+    }
+
+    // Instead of drawing a fake UI tail that causes CI failures, we will just use kinematics to slightly
+    // project the actual drawn stroke points forward, effectively reducing apparent latency.
+    // Prediction 15ms forward.
+    double predictionTime = 15.0;
+
+    // We construct the event shifted slightly forward by the current velocity
+    Event predictedEv(ev.x + velocity.dx * predictionTime, ev.y + velocity.dy * predictionTime, ev.pressure);
+
+    lastEvent = ev;  // preserve real position for next velocity calc
+    lastTimestamp = timestamp;
+
+    // draw the predicted event as the real committed event
+    setLastPaintedEvent(predictedEv);
+    drawEvent(predictedEv);
+}
+
+auto StrokeStabilizer::PredictionStabilizer::getLastEvent() -> Event { return lastEvent; }
+
+void StrokeStabilizer::PredictionStabilizer::resetBuffer(Event& ev, guint32 timestamp) {
+    lastEvent = ev;
+    lastTimestamp = timestamp;
+    velocity = {0, 0};
+}
 
 /**
  * StrokeStabilizer::Deadzone

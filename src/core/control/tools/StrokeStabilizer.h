@@ -84,7 +84,7 @@ protected:
      *
      * Does nothing in the base class
      */
-    virtual inline void recordFirstEvent(const PositionInputData& pos){};
+    virtual inline void recordFirstEvent(const PositionInputData& pos) {};
 
     /**
      * @brief Pointer to the StrokeHandler instance handling the stroke
@@ -415,6 +415,28 @@ private:
      * @brief Timestamp of the last event received. Used to compute the velocity of the next event
      */
     guint32 lastEventTimestamp;
+};
+
+
+class PredictionStabilizer: virtual public Active {
+public:
+    PredictionStabilizer(bool finalize): Active(finalize), velocity({0, 0}), lastTimestamp(0) {}
+    ~PredictionStabilizer() override = default;
+
+    [[maybe_unused]] auto getInfo() -> std::string override {
+        return "Kinematic Prediction Stabilizer (OneNote style)";
+    }
+
+protected:
+    void recordFirstEvent(const PositionInputData& pos) override;
+    void averageAndPaint(const Event& ev, guint32 timestamp) override;
+    void resetBuffer(Event& ev, guint32 timestamp) override;
+    Event getLastEvent() override;
+
+private:
+    MathVect2 velocity;
+    guint32 lastTimestamp;
+    Event lastEvent;
 };
 
 class Arithmetic: virtual public Active {
